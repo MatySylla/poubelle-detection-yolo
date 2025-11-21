@@ -1,0 +1,13 @@
+names:
+- poubelle_pleine
+- poubelle_vide
+nc: 2
+roboflow:
+  license: CC BY 4.0
+  project: my-first-project-prs1r
+  url: https://universe.roboflow.com/deep-nhhm8/my-first-project-prs1r/dataset/2
+  version: 2
+  workspace: deep-nhhm8
+test: ../test/images
+train: ../train/images
+val: ../valid/images
