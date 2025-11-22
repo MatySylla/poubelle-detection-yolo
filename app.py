@@ -136,7 +136,7 @@ if page == "Accueil":
 
     with col2:
         st.info("Paramètres d'inférence")
-        conf_th = st.slider("Seuil de confiance", 0.05, 0.95, 0.25, 0.05)
+        conf_th = st.slider("Seuil de confiance", 0.7, 0.80, 0.75, 0.01)
         max_det = st.number_input("Max détections à afficher", min_value=1, max_value=20, value=5, step=1)
 
     if uploaded_file:
