@@ -1,5 +1,4 @@
-ultralytics
-streamlit
-pillow
+ultralytics==8.2.0
+Pillow
 numpy
-pandas
+streamlit
