@@ -1,6 +1,12 @@
-opencv-python-headless
-ultralytics
-streamlit
-pillow
-numpy
-pandas
+# Interface web
+streamlit==1.51.0
+
+# YOLO et dépendances
+ultralytics==8.1.4
+opencv-python-headless==4.8.1.78
+Pillow==10.0.0
+numpy==1.25.2
+
+# PyTorch CPU-only (compatible Streamlit Cloud)
+torch==2.1.0+cpu
+-f https://download.pytorch.org/whl/torch_stable.html
