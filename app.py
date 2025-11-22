@@ -9,21 +9,21 @@ import os
 import datetime
 import base64
 
-# -------------------------
-# CONFIG
-# -------------------------
+
+# CONFIGuration
+
 MODEL_PATH = "runs/detect/model_poubelle2/weights/best.pt"  # ton modèle
-DEMO_IMAGE = "/mnt/data/A_photograph_captures_a_cylindrical_trash_bin_made.png"  # image de demo
+DEMO_IMAGE = "img_test.jpg"  # image de démo locale
 LOG_CSV = "predictions_log.csv"
 
-# -------------------------
-# REQUIRE CHECKS
-# -------------------------
-st.set_page_config(page_title="Poubelle IA – Dashboard", page_icon="🗑️", layout="wide")
 
-# -------------------------
-# UTIL: load model (cached)
-# -------------------------
+# REQUIRE CHECKS
+
+st.set_page_config(page_title="Poubelle IA  Dashboard", page_icon="🗑️", layout="wide")
+
+
+# UTIL: load model 
+
 @st.cache_resource
 def load_model(path=MODEL_PATH):
     if not os.path.exists(path):
@@ -33,9 +33,9 @@ def load_model(path=MODEL_PATH):
 
 model = load_model()
 
-# -------------------------
+
 # UTIL: log prédiction
-# -------------------------
+
 def log_prediction(img_name, detections):
     ts = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
     records = []
@@ -50,18 +50,18 @@ def log_prediction(img_name, detections):
     else:
         df.to_csv(LOG_CSV, index=False)
 
-# -------------------------
+
 # UTIL: download link for dataframe
-# -------------------------
+
 def get_table_download_link(df: pd.DataFrame, filename="predictions.csv"):
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()
     href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">⬇️ Télécharger les logs (.csv)</a>'
     return href
 
-# -------------------------
+
 # THEME SWITCH
-# -------------------------
+
 if "dark_mode" not in st.session_state:
     st.session_state.dark_mode = False
 
@@ -89,9 +89,9 @@ def inject_css():
 
 inject_css()
 
-# -------------------------
+
 # SIDEBAR: navigation + settings
-# -------------------------
+
 st.sidebar.title("🗂 Menu")
 page = st.sidebar.radio("Aller à", ["Accueil", "Statistiques", "À propos", "Paramètres"])
 
@@ -101,22 +101,22 @@ st.sidebar.checkbox("Mode sombre", value=st.session_state.dark_mode, on_change=s
 st.sidebar.markdown("---")
 st.sidebar.write("Démo image :")
 if os.path.exists(DEMO_IMAGE):
-    st.sidebar.image(DEMO_IMAGE, use_column_width=True)
+    st.sidebar.image(DEMO_IMAGE, use_container_width=True)
 st.sidebar.markdown("---")
 if model is not None:
     with open(MODEL_PATH, "rb") as f:
         st.sidebar.download_button("⬇️ Télécharger le modèle", f, "best.pt")
 
-# -------------------------
+
 # PLACEHOLDERS pour éléments dynamiques
-# -------------------------
+
 uploaded_img_placeholder = st.empty()
 annotated_img_placeholder = st.empty()
 results_placeholder = st.empty()
 
-# -------------------------
+
 # PAGE: Accueil
-# -------------------------
+
 if page == "Accueil":
     st.markdown("<h1 style='text-align:center;'>🗑️ Détection de Poubelles (YOLOv8)</h1>", unsafe_allow_html=True)
     st.markdown("**Uploader une image** pour détecter si une poubelle est **pleine** ou **vide**.")
@@ -176,9 +176,9 @@ if page == "Accueil":
                 detections.append({"class": cls_name, "conf": conf})
             log_prediction("uploaded_image", detections)
 
-# -------------------------
+
 # PAGE: Statistiques
-# -------------------------
+
 elif page == "Statistiques":
     st.markdown("<h2>📊 Statistiques des prédictions</h2>", unsafe_allow_html=True)
     if os.path.exists(LOG_CSV):
@@ -191,9 +191,9 @@ elif page == "Statistiques":
     else:
         st.info("Aucun log trouvé. Effectuer des prédictions sur la page Accueil.")
 
-# -------------------------
+
 # PAGE: À propos
-# -------------------------
+
 elif page == "À propos":
     st.markdown("<h2>📚 À propos</h2>", unsafe_allow_html=True)
     st.markdown("""
@@ -211,9 +211,9 @@ elif page == "À propos":
     st.markdown("### Chemin de l'image de demo (locale):")
     st.code(DEMO_IMAGE)
 
-# -------------------------
+
 # PAGE: Paramètres
-# -------------------------
+
 elif page == "Paramètres":
     st.markdown("<h2>⚙️ Paramètres</h2>", unsafe_allow_html=True)
     st.markdown("Modifier le chemin du modèle ou réinitialiser les logs.")
@@ -231,8 +231,8 @@ elif page == "Paramètres":
         else:
             st.info("Aucun log à supprimer.")
 
-# -------------------------
+
 # FOOTER
-# -------------------------
+
 st.markdown("---")
-st.markdown("<p style='text-align:center;color:gray;'>Développé par Maty Sylla • Projet IA – 2025</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:gray;'>Application IA  Détection de Poubelles • Projet Deep Learning<br>Réalisé par <b>Maty Sylla</b> – 2025</p>", unsafe_allow_html=True)
