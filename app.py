@@ -9,16 +9,15 @@ import os
 import datetime
 import base64
 
-
 # -------------------------
 # CONFIG
 # -------------------------
 MODEL_PATH = "runs/detect/model_poubelle2/weights/best.pt"  # ton modèle
-DEMO_IMAGE = "/mnt/data/A_photograph_captures_a_cylindrical_trash_bin_made.png"  # image de demo (fournie)
+DEMO_IMAGE = "/mnt/data/A_photograph_captures_a_cylindrical_trash_bin_made.png"  # image de demo
 LOG_CSV = "predictions_log.csv"
 
 # -------------------------
-# REQUIRE SCHECKS
+# REQUIRE CHECKS
 # -------------------------
 st.set_page_config(page_title="Poubelle IA – Dashboard", page_icon="🗑️", layout="wide")
 
@@ -38,7 +37,6 @@ model = load_model()
 # UTIL: log prédiction
 # -------------------------
 def log_prediction(img_name, detections):
-    # detections: list of dict {class_name, conf}
     ts = datetime.datetime.now().isoformat(sep=" ", timespec="seconds")
     records = []
     if len(detections) == 0:
@@ -62,7 +60,7 @@ def get_table_download_link(df: pd.DataFrame, filename="predictions.csv"):
     return href
 
 # -------------------------
-# THEME SWITCH (CSS toggling)
+# THEME SWITCH
 # -------------------------
 if "dark_mode" not in st.session_state:
     st.session_state.dark_mode = False
@@ -70,7 +68,6 @@ if "dark_mode" not in st.session_state:
 def set_dark_mode(val):
     st.session_state.dark_mode = val
 
-# CSS for light/dark
 LIGHT_CSS = """
 :root {
   --bg: #FFFFFF;
@@ -111,11 +108,18 @@ if model is not None:
         st.sidebar.download_button("⬇️ Télécharger le modèle", f, "best.pt")
 
 # -------------------------
+# PLACEHOLDERS pour éléments dynamiques
+# -------------------------
+uploaded_img_placeholder = st.empty()
+annotated_img_placeholder = st.empty()
+results_placeholder = st.empty()
+
+# -------------------------
 # PAGE: Accueil
 # -------------------------
 if page == "Accueil":
     st.markdown("<h1 style='text-align:center;'>🗑️ Détection de Poubelles (YOLOv8)</h1>", unsafe_allow_html=True)
-    st.markdown("**Uploader une image** pour détecter si une poubelle est **pleine** ou **vide**. L'application supporte plusieurs détections par image.")
+    st.markdown("**Uploader une image** pour détecter si une poubelle est **pleine** ou **vide**.")
 
     col1, col2 = st.columns([1, 1.2])
 
@@ -124,9 +128,9 @@ if page == "Accueil":
         st.markdown("Ou utiliser l'image de démonstration ci-dessous :")
         if st.button("🔎 Utiliser l'image de démo"):
             if os.path.exists(DEMO_IMAGE):
-                uploaded_file = open(DEMO_IMAGE, "rb")
-                uploaded_bytes = uploaded_file.read()
-                uploaded_file = io.BytesIO(uploaded_bytes)
+                with open(DEMO_IMAGE, "rb") as f:
+                    uploaded_bytes = f.read()
+                    uploaded_file = io.BytesIO(uploaded_bytes)
             else:
                 st.error("Image de démo introuvable.")
 
@@ -136,43 +140,40 @@ if page == "Accueil":
         max_det = st.number_input("Max détections à afficher", min_value=1, max_value=20, value=5, step=1)
 
     if uploaded_file:
-        # read image
+        # Lecture image
         try:
             img = Image.open(uploaded_file).convert("RGB")
-        except Exception as e:
+        except Exception:
             st.error("Impossible de lire le fichier image.")
             st.stop()
 
-        st.image(img, caption="Image chargée", use_container_width=True)
+        uploaded_img_placeholder.image(img, caption="Image chargée", use_container_width=True)
 
         if model is None:
-            st.error("Modèle non chargé. Vérifie le chemin.")
+            st.error("Modèle non chargé.")
             st.stop()
 
         with st.spinner("🔍 Analyse en cours ..."):
-            # ultralytics accepts numpy array or path
             results = model.predict(np.array(img), conf=conf_th, max_det=max_det)
 
-        # annotated image
+        # Annotated image
         ann = results[0].plot()
-        st.image(ann, caption="Image annotée",  use_container_width=True)
+        annotated_img_placeholder.image(ann, caption="Image annotée", use_container_width=True)
 
-        # extract detections
+        # Extraire les détections
         boxes = results[0].boxes
         detections = []
         if boxes is None or len(boxes) == 0:
-            st.warning("❌ Aucune poubelle détectée.")
-            log_prediction("uploaded_image", [])  # log
+            results_placeholder.warning("❌ Aucune poubelle détectée.")
+            log_prediction("uploaded_image", [])
         else:
-            st.success(f"✅ {len(boxes)} détection(s) trouvée(s)")
+            results_placeholder.success(f"✅ {len(boxes)} détection(s) trouvée(s)")
             for i, b in enumerate(boxes):
                 cls_id = int(b.cls[0])
                 cls_name = model.names[cls_id]
                 conf = float(b.conf[0]) * 100
-                st.markdown(f"**{i+1}.** `{cls_name}` — confiance: {conf:.2f}%")
-                # gather detections for logging
+                results_placeholder.markdown(f"**{i+1}.** `{cls_name}` — confiance: {conf:.2f}%")
                 detections.append({"class": cls_name, "conf": conf})
-            # log detections
             log_prediction("uploaded_image", detections)
 
 # -------------------------
@@ -188,7 +189,7 @@ elif page == "Statistiques":
         st.table(summary)
         st.markdown(get_table_download_link(df), unsafe_allow_html=True)
     else:
-        st.info("Aucun log trouvé pour le moment. Effectuer des prédictions sur la page Accueil pour générer des logs.")
+        st.info("Aucun log trouvé. Effectuer des prédictions sur la page Accueil.")
 
 # -------------------------
 # PAGE: À propos
